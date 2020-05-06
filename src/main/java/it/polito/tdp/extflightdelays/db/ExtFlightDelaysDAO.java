@@ -7,9 +7,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import it.polito.tdp.extflightdelays.model.Airline;
 import it.polito.tdp.extflightdelays.model.Airport;
+import it.polito.tdp.extflightdelays.model.Arco;
 import it.polito.tdp.extflightdelays.model.Flight;
 
 public class ExtFlightDelaysDAO {
@@ -37,9 +40,9 @@ public class ExtFlightDelaysDAO {
 		}
 	}
 
-	public List<Airport> loadAllAirports() {
+	public Map<Integer, Airport> loadAllAirports() {
 		String sql = "SELECT * FROM airports";
-		List<Airport> result = new ArrayList<Airport>();
+		Map<Integer, Airport> result = new TreeMap<>();
 
 		try {
 			Connection conn = ConnectDB.getConnection();
@@ -50,7 +53,7 @@ public class ExtFlightDelaysDAO {
 				Airport airport = new Airport(rs.getInt("ID"), rs.getString("IATA_CODE"), rs.getString("AIRPORT"),
 						rs.getString("CITY"), rs.getString("STATE"), rs.getString("COUNTRY"), rs.getDouble("LATITUDE"),
 						rs.getDouble("LONGITUDE"), rs.getDouble("TIMEZONE_OFFSET"));
-				result.add(airport);
+				result.put(airport.getId(), airport);
 			}
 
 			conn.close();
@@ -91,4 +94,34 @@ public class ExtFlightDelaysDAO {
 			throw new RuntimeException("Error Connection Database");
 		}
 	}
+	
+	public List<Arco> getArchi() {
+		String sql= "SELECT f1.ORIGIN_AIRPORT_ID AS oa, f1.DESTINATION_AIRPORT_ID AS da, AVG(f1.DISTANCE) AS AVG FROM flights AS f1, flights AS f2 WHERE f1.ID=f2.ID AND f1.ORIGIN_AIRPORT_ID< f2.DESTINATION_AIRPORT_ID GROUP BY f1.ORIGIN_AIRPORT_ID, f2.DESTINATION_AIRPORT_ID";
+		
+		List<Arco> resultA = new ArrayList<>();
+		Map<Integer, Airport> aereoporti = new TreeMap<>(this.loadAllAirports());
+		try {
+			Connection conn = ConnectDB.getConnection();
+			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet rs = st.executeQuery();
+
+			while (rs.next()) {
+				
+				resultA.add(new Arco(aereoporti.get(rs.getInt("oa")), aereoporti.get(rs.getInt("da")), rs.getLong("AVG")));
+			}
+
+			conn.close();
+			return resultA;
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Errore connessione al database");
+			throw new RuntimeException("Error Connection Database");
+		}
+		
+	}
+	
+	
+	
+	
 }
