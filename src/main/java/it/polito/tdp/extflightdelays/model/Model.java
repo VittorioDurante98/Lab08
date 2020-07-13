@@ -43,13 +43,13 @@ public class Model {
 	}
 	
 	public int getSizeV(int media) {
-		this.getGrafo(media);
+		//this.getGrafo(media);
 		
 		return this.grafo.vertexSet().size();
 	}
 	
 	public int getSizeA(int media) {
-		this.getGrafo(media);
+		//this.getGrafo(media);
 		
 		return this.grafo.edgeSet().size();
 	}
